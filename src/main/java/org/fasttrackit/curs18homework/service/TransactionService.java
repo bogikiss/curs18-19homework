@@ -4,86 +4,95 @@ import lombok.AllArgsConstructor;
 import org.fasttrackit.curs18homework.exceptions.ResourceNotFoundException;
 import org.fasttrackit.curs18homework.model.Transaction;
 import org.fasttrackit.curs18homework.model.Type;
+import org.fasttrackit.curs18homework.repository.TransactionRepository;
 import org.springframework.stereotype.Service;
 
+import javax.print.attribute.standard.PresentationDirection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-@AllArgsConstructor
 @Service
 public class TransactionService {
-    private final List<Transaction> transactions = new ArrayList<>();
-
-    public List<Transaction> getAllTransactions() {
-        return transactions;
+    private final TransactionRepository repository;
+    public TransactionService(TransactionRepository repository){
+        this.repository = repository;
     }
 
-    public Transaction getTransactionById(String id) {
-        return transactions.stream()
-                .filter(transaction -> transaction.id().equals(id))
-                .findFirst()
+    //private final List<Transaction> transactions = new ArrayList<>();
+
+    public List<Transaction> getAllTransactions() {
+        return repository.findAll();
+    }
+
+    public Transaction getTransactionById(Long id) {
+        return repository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Transaction with id:%s was not found".formatted(id)));
     }
 
-    public List<Transaction> getAllTransactionsByProduct(String product) {
-        return transactions.stream()
-                .filter(transaction -> transaction.product().equals(product))
-                .toList();
-    }
+    /*public List<Transaction> getAllTransactionsByProduct(String product) {
+        return repository.findAllByProduct;
+    }*/
 
     public List<Transaction> getAllTransactionsByType(Type type) {
-        return transactions.stream()
-                .filter(transaction -> transaction.type().equals(type))
-                .toList();
+        return repository.findByType(type);
     }
 
     public List<Transaction> getTransactionsBiggerThan(Integer minAmount) {
-        return transactions.stream()
-                .filter(transaction -> transaction.amount() > minAmount)
-                .toList();
+        return repository.findByMinAmount(minAmount);
     }
 
     public List<Transaction> getTransactionsSmallerThan(Integer maxAmount) {
-        return transactions.stream()
-                .filter(transaction -> transaction.amount() < maxAmount)
-                .toList();
+        return repository.findByMaxAmount(maxAmount);
+    }
+
+    public List<Transaction> byTypeAndMin(Integer minAmount, Type type) {
+        return repository.findByTypeAndMin(type, minAmount);
     }
 
     public Transaction addNewTransaction(Transaction newTransaction) {
-        String newId = UUID.randomUUID().toString();
-        transactions.add(newTransaction.withId(newId));
-        return getTransactionById(newId);
+        return repository.save(newTransaction);
     }
 
-    public Transaction replaceTransaction(String id, Transaction replaceTransaction) {
+    public Transaction replaceTransaction(Long id, Transaction replaceTransaction) {
         Transaction foundTransaction = getTransactionById(id);
-        deleteById(id);
         Transaction updatedTransaction = Transaction.builder()
-                .id(foundTransaction.id())
-                .product(replaceTransaction.product())
-                .type(replaceTransaction.type())
-                .amount(replaceTransaction.amount())
+                .id(foundTransaction.getId())
+                .product(replaceTransaction.getProduct())
+                .type(replaceTransaction.getType())
+                .amount(replaceTransaction.getAmount())
                 .build();
-        transactions.add(updatedTransaction);
-        return updatedTransaction;
+        return repository.save(updatedTransaction);
     }
 
-    public Transaction deleteById(String id) {
+    public Transaction deleteById(Long id) {
         Transaction transactionToBeDeleted = getTransactionById(id);
-        transactions.remove(transactionToBeDeleted);
+        repository.deleteById(id);
         return transactionToBeDeleted;
     }
 
-    public Map<Type, List<Transaction>> groupByType() {
-        return transactions.stream()
-                .collect(Collectors.groupingBy(Transaction::type));
+    //NEM MŰKÖDIK, NINCS KÉSZ
+    /*public Map<Type, Double> groupByTypeToSum(Type type) {
+        return repository.groupByTypeToSum(type);
     }
 
     public Map<String, List<Transaction>> groupByProduct() {
         return transactions.stream()
                 .collect(Collectors.groupingBy(Transaction::product));
+    }*/
+
+
+    //valoszinuleg nem jo, en talaltam ki, google PATCH!!
+    public Transaction changeProductAndAmount(Long id, String product, Double amount) {
+        Transaction foundTransaction = getTransactionById(id);
+        Transaction updatedTransaction = Transaction.builder()
+                .id(foundTransaction.getId())
+                .product(product)
+                .type(foundTransaction.getType())
+                .amount(amount)
+                .build();
+        return repository.save(updatedTransaction);
     }
 }

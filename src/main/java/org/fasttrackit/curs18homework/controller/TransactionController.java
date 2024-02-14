@@ -17,9 +17,9 @@ public class TransactionController {
 
     @GetMapping
     public List<Transaction> getAllTransactions(String product, Type type, Integer minAmount, Integer maxAmount){
-        if (product != null) {
+        /*if (product != null) {
             return service.getAllTransactionsByProduct(product);
-        }
+        }*/
 
         if (type != null) {
             return service.getAllTransactionsByType(type);
@@ -30,11 +30,14 @@ public class TransactionController {
         if (maxAmount != null) {
             return service.getTransactionsSmallerThan(maxAmount);
         }
+        if (minAmount != null && type != null) {
+            return service.byTypeAndMin(minAmount, type);
+        }
         return service.getAllTransactions();
     }
 
     @GetMapping("{id}")
-    public Transaction getTransactionById(@PathVariable String id) {
+    public Transaction getTransactionById(@PathVariable Long id) {
         return service.getTransactionById(id);
     }
 
@@ -44,22 +47,27 @@ public class TransactionController {
     }
 
     @PutMapping("{id}")
-    public Transaction replaceTransaction(@PathVariable String id, @RequestBody Transaction replaceTransaction){
+    public Transaction replaceTransaction(@PathVariable Long id, @RequestBody Transaction replaceTransaction){
         return service.replaceTransaction(id, replaceTransaction);
     }
 
+    @PatchMapping("{id}")
+    public Transaction changeProductAndAmount(@PathVariable Long id, @RequestBody String product, @RequestBody Double amount){
+        return service.changeProductAndAmount(id, product, amount);
+    }
+
     @DeleteMapping("{id}")
-    public Transaction deleteById(@PathVariable String id){
+    public Transaction deleteById(@PathVariable Long id){
         return service.deleteById(id);
     }
 
-    @GetMapping("reports/type")
-    public Map<Type, List<Transaction>> getTransactionsOfType(){
-        return service.groupByType();
+    /*@GetMapping("reports/type")
+    public Map<Type, Double> groupByTypeToSum(Type type){
+        return service.groupByTypeToSum(type);
     }
 
     @GetMapping("reports/product")
     public Map<String, List<Transaction>> getTransactionsOfProduct(){
         return service.groupByProduct();
-    }
+    }*/
 }
