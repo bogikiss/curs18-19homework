@@ -7,7 +7,6 @@ import org.fasttrackit.curs18homework.service.TransactionService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RequestMapping("transactions")
 @RestController
@@ -16,11 +15,10 @@ public class TransactionController {
     private final TransactionService service;
 
     @GetMapping
-    public List<Transaction> getAllTransactions(String product, Type type, Integer minAmount, Integer maxAmount){
-        /*if (product != null) {
+    public List<Transaction> getAllTransactions(String product, Type type, Double minAmount, Double maxAmount) {
+        if (product != null) {
             return service.getAllTransactionsByProduct(product);
-        }*/
-
+        }
         if (type != null) {
             return service.getAllTransactionsByType(type);
         }
@@ -30,8 +28,17 @@ public class TransactionController {
         if (maxAmount != null) {
             return service.getTransactionsSmallerThan(maxAmount);
         }
-        if (minAmount != null && type != null) {
+        if (type != null && minAmount != null) {
             return service.byTypeAndMin(minAmount, type);
+        }
+        if (type != null && maxAmount != null) {
+            return service.byTypeAndMax(maxAmount, type);
+        }
+        if (minAmount != null && maxAmount != null) {
+            return service.byMinAndMax(minAmount, maxAmount);
+        }
+        if (type != null && minAmount != null && maxAmount != null) {
+            return service.byTypeAndMinAndMax(type, minAmount, maxAmount);
         }
         return service.getAllTransactions();
     }
@@ -42,32 +49,17 @@ public class TransactionController {
     }
 
     @PostMapping
-    public Transaction addTransaction(@RequestBody Transaction newTransaction){
+    public Transaction addTransaction(@RequestBody Transaction newTransaction) {
         return service.addNewTransaction(newTransaction);
     }
 
     @PutMapping("{id}")
-    public Transaction replaceTransaction(@PathVariable Long id, @RequestBody Transaction replaceTransaction){
+    public Transaction replaceTransaction(@PathVariable Long id, @RequestBody Transaction replaceTransaction) {
         return service.replaceTransaction(id, replaceTransaction);
     }
 
-    @PatchMapping("{id}")
-    public Transaction changeProductAndAmount(@PathVariable Long id, @RequestBody String product, @RequestBody Double amount){
-        return service.changeProductAndAmount(id, product, amount);
-    }
-
     @DeleteMapping("{id}")
-    public Transaction deleteById(@PathVariable Long id){
+    public Transaction deleteById(@PathVariable Long id) {
         return service.deleteById(id);
     }
-
-    /*@GetMapping("reports/type")
-    public Map<Type, Double> groupByTypeToSum(Type type){
-        return service.groupByTypeToSum(type);
-    }
-
-    @GetMapping("reports/product")
-    public Map<String, List<Transaction>> getTransactionsOfProduct(){
-        return service.groupByProduct();
-    }*/
 }
